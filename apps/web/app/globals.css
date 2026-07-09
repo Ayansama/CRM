@@ -1,0 +1,90 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: #f0f2f5;
+    --foreground: #111827;
+
+    --card: #ffffff;
+    --card-foreground: #111827;
+
+    --popover: #ffffff;
+    --popover-foreground: #111827;
+
+    --primary: #1a1a2e; /* Navy - nav/structural only */
+    --primary-foreground: #ffffff;
+
+    --secondary: #f3f4f6;
+    --secondary-foreground: #1f2937;
+
+    --muted: #f3f4f6;
+    --muted-foreground: #6b7280;
+
+    --accent: #f0fdf4; /* Light Green */
+    --accent-foreground: #15803d; /* Dark Green */
+
+    --destructive: #ef4444;
+    --destructive-foreground: #ffffff;
+
+    --border: #e5e7eb;
+    --input: #f9fafb;
+    --ring: #1a1a2e;
+
+    /* Primary CTA buttons */
+    --cta: #fb923c; /* orange-400 */
+    --cta-hover: #f97316; /* orange-500 */
+    --cta-foreground: #ffffff;
+
+    --radius: 0.75rem; /* 12px default for buttons/modals/cards */
+    --radius-sm: 0.5rem; /* 8px default for small elements */
+  }
+
+  .dark {
+    --background: #111827;
+    --foreground: #f9fafb;
+
+    --card: #1f2937;
+    --card-foreground: #f9fafb;
+
+    --popover: #1f2937;
+    --popover-foreground: #f9fafb;
+
+    --primary: #f9fafb;
+    --primary-foreground: #111827;
+
+    --secondary: #374151;
+    --secondary-foreground: #f9fafb;
+
+    --muted: #374151;
+    --muted-foreground: #9ca3af;
+
+    --accent: #14532d; /* Dark Forest Green for dark mode */
+    --accent-foreground: #4ade80; /* Bright Green */
+
+    --destructive: #dc2626;
+    --destructive-foreground: #ffffff;
+
+    --border: #374151;
+    --input: #1f2937;
+    --ring: #f9fafb;
+
+    /* Orange CTA stays vibrant orange in dark mode */
+    --cta: #fb923c;
+    --cta-hover: #f97316;
+    --cta-foreground: #ffffff;
+  }
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-feature-settings: "rlig" 1, "calt" 1;
+    font-size: 14px;
+  }
+}

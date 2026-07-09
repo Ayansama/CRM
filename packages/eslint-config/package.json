@@ -1,0 +1,6 @@
+{
+  "name": "@groweasy/eslint-config",
+  "version": "1.0.0",
+  "private": true,
+  "main": "base.js"
+}

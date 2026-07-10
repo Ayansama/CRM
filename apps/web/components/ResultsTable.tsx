@@ -190,14 +190,19 @@ function SuccessTable({ records }: { records: CrmRecord[] }) {
             const row = rows[virtualRow.index];
             return (
               <tr key={row.id} className="hover:bg-muted/40 transition-colors">
-                {row.getVisibleCells().map((cell) => (
-                  <td
-                    key={cell.id}
-                    className="px-4 py-2 text-sm text-foreground max-w-[200px] truncate whitespace-nowrap align-middle"
-                  >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
+                {row.getVisibleCells().map((cell) => {
+                  const val = cell.getValue();
+                  const tooltip = typeof val === 'object' && val !== null ? JSON.stringify(val) : (val ? String(val) : '');
+                  return (
+                    <td
+                      key={cell.id}
+                      title={tooltip || undefined}
+                      className="px-4 py-2 text-sm text-foreground max-w-[200px] truncate whitespace-nowrap align-middle"
+                    >
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  );
+                })}
               </tr>
             );
           })}

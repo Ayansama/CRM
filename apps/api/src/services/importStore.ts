@@ -234,3 +234,251 @@ export const getAllImports = async (): Promise<DbImport[]> => {
     return Array.from(inMemoryImports.values()).sort((a, b) => b.uploaded_at.localeCompare(a.uploaded_at));
   }
 };
+
+export const getAllLeads = async (
+  page: number,
+  limit: number,
+  search?: string
+): Promise<{ total: number; leads: CrmRecord[] }> => {
+  const offset = (page - 1) * limit;
+
+  if (isDbConnected()) {
+    try {
+      let sql = `
+        SELECT COUNT(*) OVER() as total_count, data
+        FROM import_records
+        WHERE status = 'success'
+      `;
+      const params: any[] = [limit, offset];
+
+      if (search) {
+        sql += ` AND ( (data->>'email') ILIKE $3 OR (data->>'mobile_without_country_code') LIKE $3 )`;
+        params.push(`%${search}%`);
+      }
+
+      sql += ` ORDER BY (data->>'created_at') DESC LIMIT $1 OFFSET $2`;
+
+      const res = await query(sql, params);
+      const total = res.rows.length > 0 ? parseInt(res.rows[0].total_count, 10) : 0;
+      const leads = res.rows.map((r) => r.data as CrmRecord);
+      return { total, leads };
+    } catch (error) {
+      console.error('Error fetching leads from DB:', error);
+      return { total: 0, leads: [] };
+    }
+  } else {
+    const allRecords: CrmRecord[] = [];
+    for (const [, records] of inMemoryImportRecords) {
+      for (const r of records) {
+        if (r.status === 'success') {
+          allRecords.push(r.data as CrmRecord);
+        }
+      }
+    }
+
+    let filtered = allRecords;
+    if (search) {
+      const searchLower = search.toLowerCase();
+      filtered = allRecords.filter((r) => {
+        const emailMatch = r.email && r.email.toLowerCase().includes(searchLower);
+        const phoneMatch = r.mobile_without_country_code && r.mobile_without_country_code.includes(search);
+        return emailMatch || phoneMatch;
+      });
+    }
+
+    filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+    const sliced = filtered.slice(offset, offset + limit);
+    return {
+      total: filtered.length,
+      leads: sliced,
+    };
+  }
+};
+
+export const getAnalytics = async (): Promise<any> => {
+  let allLeads: CrmRecord[] = [];
+
+  if (isDbConnected()) {
+    try {
+      const res = await query("SELECT data FROM import_records WHERE status = 'success'");
+      allLeads = res.rows.map((r) => r.data as CrmRecord);
+    } catch (error) {
+      console.error('Error fetching all leads for analytics from DB:', error);
+    }
+  } else {
+    for (const [, records] of inMemoryImportRecords) {
+      for (const r of records) {
+        if (r.status === 'success') {
+          allLeads.push(r.data as CrmRecord);
+        }
+      }
+    }
+  }
+
+  const totals = {
+    leads: allLeads.length,
+    salesDone: 0,
+    conversionRate: 0,
+  };
+
+  const byStatus = {
+    GOOD_LEAD_FOLLOW_UP: 0,
+    DID_NOT_CONNECT: 0,
+    BAD_LEAD: 0,
+    SALE_DONE: 0,
+    uncontacted: 0,
+  };
+
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const todayEnd = new Date();
+  todayEnd.setHours(23, 59, 59, 999);
+
+  const todayStats = {
+    total: 0,
+    contacted: 0,
+    goodLeads: 0,
+    badLeads: 0,
+    didntConnect: 0,
+    saleDone: 0,
+  };
+
+  const activityTrend = Array.from({ length: 24 }, (_, h) => ({
+    hour: h,
+    totalLeads: 0,
+    contacted: 0,
+    goodLead: 0,
+    badLead: 0,
+    didntConnect: 0,
+    saleDone: 0,
+  }));
+
+  allLeads.forEach((r) => {
+    if (r.crm_status === 'SALE_DONE') {
+      totals.salesDone++;
+    }
+
+    if (!r.crm_status) {
+      byStatus.uncontacted++;
+    } else if (r.crm_status in byStatus) {
+      byStatus[r.crm_status as keyof typeof byStatus]++;
+    }
+
+    const d = new Date(r.created_at);
+    if (!isNaN(d.getTime())) {
+      if (d >= todayStart && d <= todayEnd) {
+        todayStats.total++;
+        const h = d.getHours();
+        if (h >= 0 && h < 24) {
+          activityTrend[h].totalLeads++;
+          if (r.crm_status) {
+            todayStats.contacted++;
+            activityTrend[h].contacted++;
+            if (r.crm_status === 'GOOD_LEAD_FOLLOW_UP') {
+              todayStats.goodLeads++;
+              activityTrend[h].goodLead++;
+            } else if (r.crm_status === 'BAD_LEAD') {
+              todayStats.badLeads++;
+              activityTrend[h].badLead++;
+            } else if (r.crm_status === 'DID_NOT_CONNECT') {
+              todayStats.didntConnect++;
+              activityTrend[h].didntConnect++;
+            } else if (r.crm_status === 'SALE_DONE') {
+              todayStats.saleDone++;
+              activityTrend[h].saleDone++;
+            }
+          }
+        }
+      }
+    }
+  });
+
+  totals.conversionRate = totals.leads > 0 ? parseFloat(((totals.salesDone / totals.leads) * 100).toFixed(1)) : 0;
+
+  const now = new Date();
+  const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+
+  let thisMonthLeads = 0;
+  let lastMonthLeads = 0;
+
+  const getMonday = (d: Date) => {
+    const date = new Date(d);
+    const day = date.getDay();
+    const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+    return new Date(date.setDate(diff));
+  };
+
+  const thisMonday = getMonday(now);
+  thisMonday.setHours(0, 0, 0, 0);
+
+  const lastMonday = new Date(thisMonday);
+  lastMonday.setDate(lastMonday.getDate() - 7);
+
+  const lastSundayEnd = new Date(thisMonday);
+  lastSundayEnd.setMilliseconds(-1);
+
+  let thisWeekSales = 0;
+  let lastWeekSales = 0;
+
+  let thisMonthSales = 0;
+  let lastMonthSales = 0;
+
+  allLeads.forEach((r) => {
+    const d = new Date(r.created_at);
+    if (!isNaN(d.getTime())) {
+      if (d >= startOfThisMonth) {
+        thisMonthLeads++;
+        if (r.crm_status === 'SALE_DONE') {
+          thisMonthSales++;
+        }
+      } else if (d >= startOfLastMonth && d <= endOfLastMonth) {
+        lastMonthLeads++;
+        if (r.crm_status === 'SALE_DONE') {
+          lastMonthSales++;
+        }
+      }
+
+      if (d >= thisMonday) {
+        if (r.crm_status === 'SALE_DONE') {
+          thisWeekSales++;
+        }
+      } else if (d >= lastMonday && d <= lastSundayEnd) {
+        if (r.crm_status === 'SALE_DONE') {
+          lastWeekSales++;
+        }
+      }
+    }
+  });
+
+  let leadsVsLastMonth: number | null = null;
+  if (lastMonthLeads > 0) {
+    leadsVsLastMonth = parseFloat((((thisMonthLeads - lastMonthLeads) / lastMonthLeads) * 100).toFixed(1));
+  }
+
+  let salesVsLastWeek: number | null = null;
+  if (lastWeekSales > 0) {
+    salesVsLastWeek = parseFloat((((thisWeekSales - lastWeekSales) / lastWeekSales) * 100).toFixed(1));
+  }
+
+  let conversionDelta: number | null = null;
+  const thisMonthConversion = thisMonthLeads > 0 ? (thisMonthSales / thisMonthLeads) * 100 : 0;
+  const lastMonthConversion = lastMonthLeads > 0 ? (lastMonthSales / lastMonthLeads) * 100 : 0;
+  if (thisMonthLeads > 0 && lastMonthLeads > 0) {
+    conversionDelta = parseFloat((thisMonthConversion - lastMonthConversion).toFixed(1));
+  }
+
+  return {
+    totals,
+    byStatus,
+    today: todayStats,
+    activityTrend,
+    delta: {
+      leadsVsLastMonth,
+      salesVsLastWeek,
+      conversionDelta,
+    },
+  };
+};

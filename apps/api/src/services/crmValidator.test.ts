@@ -20,7 +20,7 @@ describe('CRM Validator Service', () => {
 
     expect(skipped).toHaveLength(0);
     expect(records).toHaveLength(1);
-    expect(records[0]).toEqual({
+    expect(records[0].data).toEqual({
       created_at: new Date('2024-05-01').toISOString(),
       name: 'John Doe',
       email: 'john@doe.com',
@@ -52,8 +52,8 @@ describe('CRM Validator Service', () => {
 
     const { records } = validateAndCleanRecords(extractedRecords, [], [], 0);
 
-    expect(records[0].crm_status).toBe('');
-    expect(records[0].data_source).toBe('');
+    expect(records[0].data.crm_status).toBe('');
+    expect(records[0].data.data_source).toBe('');
   });
 
   it('should fallback to current time if created_at is unparseable', () => {
@@ -67,8 +67,8 @@ describe('CRM Validator Service', () => {
 
     const { records } = validateAndCleanRecords(extractedRecords, [], [], 0);
     
-    expect(records[0].created_at).toBeDefined();
-    expect(isNaN(Date.parse(records[0].created_at))).toBe(false);
+    expect(records[0].data.created_at).toBeDefined();
+    expect(isNaN(Date.parse(records[0].data.created_at))).toBe(false);
   });
 
   it('should skip rows with neither email nor mobile and track absolute index', () => {

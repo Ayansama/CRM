@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import AppShell from "../components/layout/AppShell";
 
 export const metadata: Metadata = {
   title: "GrowEasy CRM - AI CSV Importer",
@@ -26,7 +27,7 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased font-sans min-h-screen bg-background text-foreground">
-        {children}
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );

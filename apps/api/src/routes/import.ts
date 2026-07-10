@@ -11,6 +11,8 @@ import {
   getImportResult,
   getAllImports,
   activeImportJobs,
+  getAllLeads,
+  getAnalytics,
 } from '../services/importStore';
 import { sseManager } from '../services/sseManager';
 
@@ -381,6 +383,36 @@ router.get('/imports', async (req: Request, res: Response) => {
     res.json(list);
   } catch (error: any) {
     res.status(500).json({ error: error.message || 'Failed to list imports.' });
+  }
+});
+
+/**
+ * GET /api/leads
+ * Returns paginated and optionally filtered leads from all imports, newest first.
+ */
+router.get('/leads', async (req: Request, res: Response) => {
+  try {
+    const page = parseInt(req.query.page as string, 10) || 1;
+    const limit = parseInt(req.query.limit as string, 10) || 50;
+    const search = req.query.search as string | undefined;
+
+    const result = await getAllLeads(page, limit, search);
+    res.json(result);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to retrieve leads.' });
+  }
+});
+
+/**
+ * GET /api/analytics
+ * Returns aggregated statistics for the dashboard.
+ */
+router.get('/analytics', async (req: Request, res: Response) => {
+  try {
+    const analytics = await getAnalytics();
+    res.json(analytics);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to compute analytics.' });
   }
 });
 

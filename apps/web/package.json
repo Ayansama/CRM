@@ -19,6 +19,7 @@
     "papaparse": "^5.4.1",
     "react": "^19.0.0-rc-6f23050401-20240625",
     "react-dom": "^19.0.0-rc-6f23050401-20240625",
+    "recharts": "^2.12.7",
     "tailwind-merge": "^2.2.2"
   },
   "devDependencies": {

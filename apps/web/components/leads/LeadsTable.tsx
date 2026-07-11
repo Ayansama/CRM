@@ -8,7 +8,7 @@ import {
 } from '@tanstack/react-table';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { CrmRecord } from '@groweasy/shared-types';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, MoreHorizontal, X } from 'lucide-react';
 
 interface LeadsTableProps {
   leads: CrmRecord[];
@@ -16,6 +16,7 @@ interface LeadsTableProps {
 
 export default function LeadsTable({ leads }: LeadsTableProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [popover, setPopover] = useState<{ x: number; y: number; note: string | null } | null>(null);
 
   // Generate a soft background color class for lead owner initials
   const getAvatarBg = (name: string) => {
@@ -112,11 +113,7 @@ export default function LeadsTable({ leads }: LeadsTableProps) {
           );
         },
       },
-      {
-        id: 'quality',
-        header: 'Quality',
-        cell: () => <span className="text-muted-foreground/60">—</span>,
-      },
+
       {
         accessorKey: 'lead_owner',
         header: 'Lead Owner',
@@ -135,14 +132,29 @@ export default function LeadsTable({ leads }: LeadsTableProps) {
         },
       },
       {
-        id: 'actions',
-        header: 'Actions',
-        cell: () => (
-          <button className="text-xs font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 flex items-center space-x-0.5 transition-colors">
-            <span>More</span>
-            <ChevronRight className="w-3.5 h-3.5" />
-          </button>
-        ),
+        id: 'note',
+        header: 'Note',
+        cell: (info: any) => {
+          const note = info.row.original.crm_note;
+          return (
+            <button
+              onClick={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                // Ensure popover doesn't overflow the right side of the screen
+                const x = Math.min(rect.left, window.innerWidth - 300);
+                setPopover({
+                  x,
+                  y: rect.bottom + 4,
+                  note: note || null
+                });
+              }}
+              className="p-1 rounded-md hover:bg-muted text-muted-foreground transition-colors"
+              title="View Notes"
+            >
+              <MoreHorizontal className="w-4 h-4" />
+            </button>
+          );
+        },
       },
     ],
     []
@@ -181,11 +193,12 @@ export default function LeadsTable({ leads }: LeadsTableProps) {
   }
 
   return (
-    <div
-      ref={containerRef}
-      className="w-full overflow-auto max-h-[550px] border border-border bg-card rounded-xl relative shadow-sm"
-    >
-      <table className="w-full text-left border-collapse table-auto">
+    <>
+      <div
+        ref={containerRef}
+        className="w-full overflow-auto max-h-[550px] border border-border bg-card rounded-xl relative shadow-sm"
+      >
+        <table className="w-full text-left border-collapse table-auto">
         <thead className="sticky top-0 bg-secondary/95 backdrop-blur-sm z-10 border-b border-border shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
@@ -234,5 +247,25 @@ export default function LeadsTable({ leads }: LeadsTableProps) {
         </tbody>
       </table>
     </div>
+      {popover && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setPopover(null)} />
+          <div
+            className="fixed z-50 w-72 bg-card border border-border rounded-xl shadow-lg flex flex-col"
+            style={{ left: popover.x, top: popover.y }}
+          >
+            <div className="flex justify-between items-center p-3 border-b border-border/50">
+              <span className="font-bold text-sm">Notes</span>
+              <button onClick={() => setPopover(null)} className="text-muted-foreground hover:text-foreground transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-4 text-sm text-foreground/80 whitespace-pre-wrap max-h-60 overflow-y-auto">
+              {popover.note ? popover.note : <span className="italic text-muted-foreground">No notes available</span>}
+            </div>
+          </div>
+        </>
+      )}
+    </>
   );
 }

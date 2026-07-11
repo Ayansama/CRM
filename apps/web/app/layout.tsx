@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import AppShell from "../components/layout/AppShell";
+import { ThemeProvider } from "../components/layout/ThemeProvider";
 
 export const metadata: Metadata = {
   title: "GrowEasy CRM - AI CSV Importer",
@@ -13,7 +14,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
@@ -27,7 +28,9 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased font-sans min-h-screen bg-background text-foreground">
-        <AppShell>{children}</AppShell>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <AppShell>{children}</AppShell>
+        </ThemeProvider>
       </body>
     </html>
   );

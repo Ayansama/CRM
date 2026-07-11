@@ -4,5 +4,8 @@
   "private": true,
   "main": "./index.ts",
   "types": "./index.ts",
-  "dependencies": {}
+  "dependencies": {},
+  "devDependencies": {
+    "@groweasy/typescript-config": "workspace:*"
+  }
 }

@@ -52,4 +52,25 @@ This document records the major errors encountered during setup, compilation, an
   * Modified [geminiClient.ts](file:///c:/Users/kamis/OneDrive/Desktop/importer/apps/api/src/services/ai/geminiClient.ts) to remove `""` from the enums of `crm_status` and `data_source`.
   * Removed `crm_status` and `data_source` from the `required` properties array in the Gemini schema, allowing them to be omitted by the model.
   * Relied on [validation.ts](file:///c:/Users/kamis/OneDrive/Desktop/importer/apps/api/src/services/ai/validation.ts)'s Zod parsing schema, which automatically defaults omitted values to `""`.
+## 7. Recharts Line Chart Rendering & Alignment Issue
+* **Error Message:** Line chart not rendering data points; lines hovered at 0; X-axis ticks misaligned.
+* **Root Cause:**
+  * **Incorrect Axis Type:** The `XAxis` used `dataKey="hour"` with values `0-23` without specifying `type="number"`. Recharts treated it as a category axis, misaligning numeric ticks.
+  * **Historical Data vs Today's Window:** The backend's `activityTrend` was bucketing records into a 24-hour window *for today*. Since the imported CSV leads had historical `created_at` dates, they fell outside of today, leaving all buckets at `0`.
+  * **Height Mismatch:** The chart card height was set independently of the adjacent Status Analytics donut chart card, causing visual imbalance.
+* **Solution:**
+  * **Backend Refactor:** Modified `getAnalytics` in [importStore.ts](file:///c:/Users/kamis/OneDrive/Desktop/importer/apps/api/src/services/importStore.ts) to aggregate data into a **7-day daily trend** (bucketed by date string with short weekday labels like "Mon", "Tue") instead of hourly intervals for today.
+  * **Frontend Refactor:** Updated [ActivityTrendChart.tsx](file:///c:/Users/kamis/OneDrive/Desktop/importer/apps/web/components/dashboard/ActivityTrendChart.tsx) to render a standard category axis matching the new 7-day labels, added visible data point dots (`dot={{ r: 3 }}`), and enabled flexbox container scaling.
+  * **Layout Alignment:** Fixed the wrapper container inside [page.tsx](file:///c:/Users/kamis/OneDrive/Desktop/importer/apps/web/app/dashboard/page.tsx) to `h-[380px]` to perfectly match the adjacent donut card height.
 
+## 8. QuickStats Incorrectly Filtering on Search
+* **Error Message:** Typing in the search bar incorrectly filtered the QuickStats summary cards above the leads table, causing total counts to reflect the search results rather than the overall loaded dataset.
+* **Root Cause:** The `useMemo` hook responsible for calculating QuickStats metrics (Total, Good, Pending, and Conversion Rate) had a dependency on `filteredLeads` instead of the unfiltered `leads` array.
+* **Solution:** 
+  * Updated [page.tsx](file:///c:/Users/kamis/OneDrive/Desktop/importer/apps/web/app/leads/page.tsx) to depend on and iterate over the `leads` state rather than `filteredLeads` when computing `stats`. This decouples the table's visual search filter from the global metrics calculation.
+
+## 9. AppShell Background Not Switching in Dark Mode
+* **Error Message:** When toggling Dark Mode, the main page background remained a light gray (`#f0f2f5`) while the cards and tables correctly switched to dark themes.
+* **Root Cause:** The `AppShell` component layout had a hardcoded background color (`bg-[#f0f2f5]`) that lacked a `dark:` variant, preventing it from adapting to the active theme.
+* **Solution:** 
+  * Updated [AppShell.tsx](file:///c:/Users/kamis/OneDrive/Desktop/importer/apps/web/components/layout/AppShell.tsx) to include the `dark:bg-background` Tailwind class, allowing the layout background to automatically switch to the correct dark mode color when the theme is toggled.

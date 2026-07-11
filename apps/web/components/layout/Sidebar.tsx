@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { ThemeToggle } from './ThemeToggle';
 import {
   LayoutDashboard,
   Zap,
@@ -94,10 +95,10 @@ export default function Sidebar() {
       <div className="px-4 py-4 flex items-center justify-between hover:bg-white/5 cursor-pointer border-b border-white/5">
         <div className="flex items-center space-x-3">
           <div className="w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center font-semibold text-sm">
-            VT
+            A
           </div>
           <div>
-            <p className="text-xs font-semibold leading-tight">VK Test</p>
+            <p className="text-xs font-semibold leading-tight">Ayan</p>
             <p className="text-[10px] text-white/50 tracking-wider uppercase font-semibold mt-0.5">Owner</p>
           </div>
         </div>
@@ -121,6 +122,7 @@ export default function Sidebar() {
 
       {/* Footer Pinned Section */}
       <div className="p-2 border-t border-white/5 mt-auto">
+        <ThemeToggle />
         <div
           title="Coming soon"
           className="flex items-center space-x-3 px-4 py-3 rounded-lg text-white/40 cursor-not-allowed select-none"

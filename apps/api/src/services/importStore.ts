@@ -344,15 +344,18 @@ export const getAnalytics = async (): Promise<any> => {
     saleDone: 0,
   };
 
-  const activityTrend = Array.from({ length: 24 }, (_, h) => ({
-    hour: h,
-    totalLeads: 0,
-    contacted: 0,
-    goodLead: 0,
-    badLead: 0,
-    didntConnect: 0,
-    saleDone: 0,
-  }));
+  // Build last-7-days daily trend (day 0 = 6 days ago, day 6 = today)
+  const sevenDaysAgo = new Date(todayStart);
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+
+  // Label each bucket with a short weekday label and ISO date string
+  const activityTrend = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(sevenDaysAgo);
+    d.setDate(d.getDate() + i);
+    const label = d.toLocaleDateString('en-US', { weekday: 'short' }); // Mon, Tue …
+    const dateStr = d.toISOString().slice(0, 10);                       // YYYY-MM-DD
+    return { day: i, label, dateStr, totalLeads: 0, contacted: 0, goodLead: 0, badLead: 0, didntConnect: 0, saleDone: 0 };
+  });
 
   allLeads.forEach((r) => {
     if (r.crm_status === 'SALE_DONE') {
@@ -369,26 +372,26 @@ export const getAnalytics = async (): Promise<any> => {
     if (!isNaN(d.getTime())) {
       if (d >= todayStart && d <= todayEnd) {
         todayStats.total++;
-        const h = d.getHours();
-        if (h >= 0 && h < 24) {
-          activityTrend[h].totalLeads++;
-          if (r.crm_status) {
-            todayStats.contacted++;
-            activityTrend[h].contacted++;
-            if (r.crm_status === 'GOOD_LEAD_FOLLOW_UP') {
-              todayStats.goodLeads++;
-              activityTrend[h].goodLead++;
-            } else if (r.crm_status === 'BAD_LEAD') {
-              todayStats.badLeads++;
-              activityTrend[h].badLead++;
-            } else if (r.crm_status === 'DID_NOT_CONNECT') {
-              todayStats.didntConnect++;
-              activityTrend[h].didntConnect++;
-            } else if (r.crm_status === 'SALE_DONE') {
-              todayStats.saleDone++;
-              activityTrend[h].saleDone++;
-            }
-          }
+        if (r.crm_status) {
+          todayStats.contacted++;
+          if (r.crm_status === 'GOOD_LEAD_FOLLOW_UP') todayStats.goodLeads++;
+          else if (r.crm_status === 'BAD_LEAD') todayStats.badLeads++;
+          else if (r.crm_status === 'DID_NOT_CONNECT') todayStats.didntConnect++;
+          else if (r.crm_status === 'SALE_DONE') todayStats.saleDone++;
+        }
+      }
+
+      // Map into the 7-day trend
+      const dateStr = d.toISOString().slice(0, 10);
+      const bucket = activityTrend.find((b) => b.dateStr === dateStr);
+      if (bucket) {
+        bucket.totalLeads++;
+        if (r.crm_status) {
+          bucket.contacted++;
+          if (r.crm_status === 'GOOD_LEAD_FOLLOW_UP') bucket.goodLead++;
+          else if (r.crm_status === 'BAD_LEAD') bucket.badLead++;
+          else if (r.crm_status === 'DID_NOT_CONNECT') bucket.didntConnect++;
+          else if (r.crm_status === 'SALE_DONE') bucket.saleDone++;
         }
       }
     }

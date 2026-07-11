@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { RefreshCw } from 'lucide-react';
 import StatsCards from '../../components/dashboard/StatsCards';
 import StatusPieChart from '../../components/dashboard/StatusPieChart';
-import DayLevelGrid from '../../components/dashboard/DayLevelGrid';
 import ActivityTrendChart from '../../components/dashboard/ActivityTrendChart';
 
 interface AnalyticsData {
@@ -29,7 +28,9 @@ interface AnalyticsData {
     saleDone: number;
   };
   activityTrend: {
-    hour: number;
+    day: number;
+    label: string;
+    dateStr: string;
     totalLeads: number;
     contacted: number;
     goodLead: number;
@@ -131,35 +132,22 @@ export default function DashboardPage() {
           <StatusPieChart byStatus={analytics.byStatus} />
         </div>
 
-        {/* Right Side: Day Level Analytics */}
-        <div className="bg-card border border-border rounded-2xl p-5 shadow-sm lg:col-span-2 flex flex-col justify-between space-y-6">
-          <div>
-            <div className="flex items-center justify-between border-b border-border/60 pb-3">
-              <div>
-                <h3 className="font-bold text-sm text-foreground">Day Level Analytics</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">Real-time counts and trends for today</p>
-              </div>
-              <button
-                onClick={handleRefresh}
-                className="text-xs font-bold text-muted-foreground hover:text-primary transition-colors"
-              >
-                Refresh
-              </button>
+        {/* Right Side: Activity Trend */}
+        <div className="bg-card border border-border rounded-2xl p-5 shadow-sm lg:col-span-2 flex flex-col h-[380px]">
+          <div className="flex items-center justify-between border-b border-border/60 pb-3 flex-shrink-0">
+            <div>
+              <h3 className="font-bold text-sm text-foreground">Day Level Analytics</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">Lead activity — last 7 days</p>
             </div>
-            
-            {/* Grid of mini status indicators */}
-            <div className="mt-4">
-              <DayLevelGrid today={analytics.today} />
-            </div>
+            <button
+              onClick={handleRefresh}
+              className="text-xs font-bold text-muted-foreground hover:text-primary transition-colors"
+            >
+              Refresh
+            </button>
           </div>
 
-          {/* Activity Trend Line Chart */}
-          <div>
-            <h4 className="text-xs uppercase font-bold text-muted-foreground/80 tracking-wider mb-3">
-              Activity Trend
-            </h4>
-            <ActivityTrendChart data={analytics.activityTrend} />
-          </div>
+          <ActivityTrendChart data={analytics.activityTrend} />
         </div>
       </div>
     </div>

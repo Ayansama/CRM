@@ -70,14 +70,14 @@ export default function ManageLeadsPage() {
     });
   }, [leads, searchQuery]);
 
-  // Compute Quick Stats from filtered results
+  // Compute Quick Stats from loaded leads
   const stats = useMemo(() => {
-    const totalCount = filteredLeads.length;
+    const totalCount = leads.length;
     let goodCount = 0;
     let pendingCount = 0;
     let saleDoneCount = 0;
 
-    filteredLeads.forEach((l) => {
+    leads.forEach((l) => {
       if (l.crm_status === 'GOOD_LEAD_FOLLOW_UP') {
         goodCount++;
       } else if (l.crm_status === '' || l.crm_status === 'DID_NOT_CONNECT') {
@@ -96,7 +96,7 @@ export default function ManageLeadsPage() {
       pending: pendingCount,
       conversion: conversionRate,
     };
-  }, [filteredLeads]);
+  }, [leads]);
 
   const hasMore = leads.length < total;
 

@@ -1,0 +1,5 @@
+﻿"created_at,name,email,country_code,mobile_without_country_code,company,city,state,country,lead_owner,crm_status,crm_note,data_source,possession_time,description"
+"2026-07-01 10:15:30,Alice Smith,alice.smith@example.com,+1,5551234567,Innovate LLC,New York,NY,USA,agent1@groweasy.ai,GOOD_LEAD_FOLLOW_UP,Requested a product demo walkthrough,leads_on_demand,Immediate,Looking for an enterprise tier plan"
+"2026-07-02 14:22:11,Michael Chang,michael.chang@example.com,+91,9876543219,Nexus Corp,Mumbai,Maharashtra,India,agent2@groweasy.ai,DID_NOT_CONNECT,Phone busy; try calling back on Friday,meridian_tower,,Looking for 3BHK commercial layout"
+"2026-07-03 09:05:00,Emma Watson,emma.watson@example.com,+44,7700900077,Creative Studio,London,,UK,agent1@groweasy.ai,SALE_DONE,Payment processed successfully,eden_park,Dec 2026,Closed via inbound marketing campaign"
+"2026-07-04 16:45:18,Rahul Sharma,rahul.sharma@example.com,+91,9111222333,Alpha Tech,Delhi,Delhi,India,agent3@groweasy.ai,BAD_LEAD,Wrong number reached; not interested,varah_swamy,,"

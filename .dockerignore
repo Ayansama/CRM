@@ -20,3 +20,7 @@ CRMassign.md
 FEATURE_PLAN.md
 csv-importer-PRD.md
 *.log
+
+# Sample data - not needed in production containers
+sample-data/
+*.csv

@@ -1,0 +1,22 @@
+node_modules
+apps/*/node_modules
+packages/*/node_modules
+.next
+apps/web/.next
+dist
+apps/api/dist
+npm-debug.log
+yarn-error.log
+.env
+.env.local
+.env.*.local
+.git
+.turbo
+
+# Documentation and logs
+*.md
+buildLog.md
+CRMassign.md
+FEATURE_PLAN.md
+csv-importer-PRD.md
+*.log

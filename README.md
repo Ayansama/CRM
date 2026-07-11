@@ -194,7 +194,7 @@ flowchart LR
 | **Database** | PostgreSQL via Neon (serverless) |
 | **Streaming** | Server-Sent Events (SSE) |
 | **File uploads** | Multer (memory storage) |
-| **Deployment** | Railway (API) · Vercel / Railway (Web) |
+| **Deployment** | Vercel / Render (Web) |
 
 ---
 
